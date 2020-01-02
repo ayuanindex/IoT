@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">IoT Hub</string>
+    <string name="place_input_url">请输入您需要连接的地址</string>
+    <string name="place_input_clientid">请输入clientID</string>
+    <string name="place_input_username">请输入用户名</string>
+    <string name="place_input_password">请输入密码</string>
+    <string name="open_link">打开连接</string>
+    <string name="close_link">关闭连接</string>
+    <string name="place_input_topic">请输入需要订阅的主题</string>
+</resources>
