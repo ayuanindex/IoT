@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initView();
         initData();
         listener();
+        RequestPermissionUtil.requestPermission(this);
     }
 
     private void initData() {
@@ -106,19 +107,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_close_link:
                 // 关闭连接
-                try {
-                    if (mqttClient == null) {
-                        return;
-                    }
-                    mqttClient.disconnect();
-                } catch (MqttException e) {
-                    e.printStackTrace();
+                if (mqttClient == null) {
+                    return;
                 }
+                new Thread() {
+                    @Override
+                    public void run() {
+                        super.run();
+                        try {
+                            mqttClient.disconnect();
+                            Log.i(TAG, "哈哈哈：" + mqttClient.isConnected());
+                        } catch (MqttException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }.start();
                 break;
             case R.id.btn_subscrib:
                 // 订阅主题
                 if (mqttClient == null) {
-                    ToastUtil.showToast(this, "请打开连接");
+                    App.showToast("请打开连接");
                     return;
                 }
                 try {
@@ -132,19 +140,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_send_message:
                 // 发送主题
-                String message = et_message.getText().toString().trim();
+                final String message = et_message.getText().toString().trim();
                 if (TextUtils.isEmpty(message)) {
-                    ToastUtil.showToast(this, "请输入需要发送的消息");
+                    App.showToast("请输入需要发送的消息");
                     return;
                 }
-                try {
-                    if (mqttClient == null) {
-                        ToastUtil.showToast(this, "请打开连接");
+                new Thread() {
+                    @Override
+                    public void run() {
+                        super.run();
+                        try {
+                            if (mqttClient == null) {
+                                App.showToast("请打开连接");
+                            }
+                            mqttClient.publish(topic, new MqttMessage(message.getBytes()));
+                        } catch (MqttException e) {
+                            e.printStackTrace();
+                        }
                     }
-                    mqttClient.publish(topic, new MqttMessage(message.getBytes()));
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
+                }.start();
                 break;
         }
     }
@@ -182,6 +196,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 初始化配置Mqtt
      */
     private void initMQTT() {
+        if (mqttClient != null && mqttClient.isConnected()) {
+            App.showToast("已连接");
+            return;
+        }
         try {
             //参数一：主机地址；参数二：客户端ID，一般以客户端唯一标识符，不能够和其他客户端重名；参数三：数据保存在内存
             mqttClient = new MqttClient(url, id, new MemoryPersistence());
@@ -226,14 +244,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 /**
                  * 发送消息成功后执行
+                 *
                  * @param iMqttDeliveryToken
                  */
                 @Override
                 public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            App.showToast("消息发送成功！！！");
+                        }
+                    });
                 }
             });
+
             //连接
-            mqttConnectThread.start();
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+                    try {
+                        mqttClient.connect(mqttConnectOptions);
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                App.showToast("连接建立成功");
+                            }
+                        });
+                    } catch (MqttSecurityException e) {
+                        e.printStackTrace();
+                        //安全问题连接失败
+                        Log.e("安全问题连接失败", e.getMessage() + "");
+                    } catch (MqttException e) {
+                        e.printStackTrace();
+                        //连接失败原因
+                        Log.e("连接失败原因", "" + e.getMessage());
+                    }
+                }
+            }.start();
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -295,7 +343,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ToastUtil.showToast(MainActivity.this, "连接成功");
+                        App.showToast("连接成功");
                         Log.i(TAG, "只走一边：----------222222222222");
                     }
                 });
