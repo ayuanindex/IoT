@@ -15,7 +15,11 @@ public class RequestPermissionUtil {
     }
 
     public static void requestPermission(Activity context) {
-        PermissionIsRequest permissions = context.getClass().getAnnotation(PermissionIsRequest.class);
-        context.requestPermissions(permissions.value(), 0);
+        try {
+            PermissionIsRequest permissions = context.getClass().getAnnotation(PermissionIsRequest.class);
+            context.requestPermissions(permissions.value(), 0);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }
