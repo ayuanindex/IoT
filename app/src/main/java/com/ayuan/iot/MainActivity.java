@@ -111,7 +111,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 topic = s.toString();
                 topicIsSubscribe();
             }
-
             @Override
             public void afterTextChanged(Editable s) {
 
@@ -171,6 +170,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         mqttClient.subscribe(topic, 0);
                         topicList.add(topic);
                         topicIsSubscribe();
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                App.showToast("主题订阅成功！");
+                            }
+                        });
                     }
                 } catch (MqttException e) {
                     e.printStackTrace();
