@@ -21,6 +21,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.MqttSecurityException;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.util.ArrayList;
@@ -106,6 +107,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btn_close_link:
                 // 关闭连接
                 try {
+                    if (mqttClient == null) {
+                        return;
+                    }
                     mqttClient.disconnect();
                 } catch (MqttException e) {
                     e.printStackTrace();
@@ -134,6 +138,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return;
                 }
                 try {
+                    if (mqttClient == null) {
+                        ToastUtil.showToast(this, "请打开连接");
+                    }
                     mqttClient.publish(topic, new MqttMessage(message.getBytes()));
                 } catch (MqttException e) {
                     e.printStackTrace();
@@ -292,8 +299,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Log.i(TAG, "只走一边：----------222222222222");
                     }
                 });
+            } catch (MqttSecurityException e) {
+                //安全问题连接失败
+                Log.e("安全问题连接失败", "e");
             } catch (MqttException e) {
-                e.printStackTrace();
+                //连接失败原因
+                Log.e("连接失败原因", "" + e);
             }
         }
     }
