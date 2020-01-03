@@ -51,10 +51,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private MqttConnectOptions mqttConnectOptions;
     private ArrayList<MessageBean> messageBeans;
     private CustomerAdapter customerAdapter;
-    private MqttConnectThread mqttConnectThread = mqttConnectThread = new MqttConnectThread();
     private String topic;
+    private ArrayList<String> topicList = new ArrayList<>();
+    /*private MqttConnectThread mqttConnectThread = new MqttConnectThread();*/
 
     @Override
+
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -106,7 +108,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                Log.i(TAG, "onTextChanged: " + s.toString());
+                topic = s.toString();
+                topicIsSubscribe();
             }
 
             @Override
@@ -114,6 +117,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             }
         });
+    }
+
+    private void topicIsSubscribe() {
+        if (topicList.contains(topic)) {
+            btn_subscrib.setEnabled(false);
+            btn_subscrib.setBackground(getDrawable(R.drawable.btn_line_onpress));
+        } else {
+            btn_subscrib.setEnabled(true);
+            btn_subscrib.setBackground(getDrawable(R.drawable.btn_selector));
+        }
     }
 
     @Override
@@ -156,32 +169,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     topic = et_topic.getText().toString().trim();
                     if (!TextUtils.isEmpty(topic)) {
                         mqttClient.subscribe(topic, 0);
+                        topicList.add(topic);
+                        topicIsSubscribe();
                     }
                 } catch (MqttException e) {
                     e.printStackTrace();
+                    App.showToast("不存在该主题！！！");
                 }
                 break;
             case R.id.btn_send_message:
-                // 发送主题
+                // 向指定主题发送消息
                 final String message = et_message.getText().toString().trim();
                 if (TextUtils.isEmpty(message)) {
                     App.showToast("请输入需要发送的消息");
                     return;
-                }
-                new Thread() {
-                    @Override
-                    public void run() {
-                        super.run();
-                        try {
-                            if (mqttClient == null) {
-                                App.showToast("请打开连接");
+                } else if (mqttClient == null || !mqttClient.isConnected()) {
+                    App.showToast("请先建立连接");
+                    return;
+                } else {
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            super.run();
+                            try {
+                                if (mqttClient == null) {
+                                    App.showToast("请打开连接");
+                                }
+                                if (topicList.size() != 0 && topicList.contains(topic)) {
+                                    mqttClient.publish(topic, new MqttMessage(message.getBytes()));
+                                } else {
+                                    runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            App.showToast("该主题尚未订阅，请订阅主题！");
+                                        }
+                                    });
+                                }
+                            } catch (MqttException e) {
+                                e.printStackTrace();
                             }
-                            mqttClient.publish(topic, new MqttMessage(message.getBytes()));
-                        } catch (MqttException e) {
-                            e.printStackTrace();
                         }
-                    }
-                }.start();
+                    }.start();
+                }
                 break;
         }
     }
@@ -242,7 +271,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                  */
                 @Override
                 public void connectionLost(Throwable throwable) {
-
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            App.showToast("连接丢失");
+                        }
+                    });
                 }
 
                 /**
@@ -276,6 +310,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         @Override
                         public void run() {
                             App.showToast("消息发送成功！！！");
+                            for (String s : topicList) {
+                                Log.i(TAG, "topicList：" + s);
+                            }
                         }
                     });
                 }
