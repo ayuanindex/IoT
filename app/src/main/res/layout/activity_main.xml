@@ -100,6 +100,7 @@
                     android:layout_toLeftOf="@id/btn_subscrib"
                     android:background="@drawable/line"
                     android:hint="@string/place_input_topic"
+                    android:inputType="text"
                     android:text="stateup"
                     android:textSize="12sp" />
 

@@ -1,7 +1,9 @@
 package com.ayuan.iot;
 
 import android.os.Bundle;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -59,7 +61,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initView();
         initData();
         listener();
-        RequestPermissionUtil.requestPermission(this);
     }
 
     private void initData() {
@@ -96,6 +97,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 tv_topic_result_message.setText(customerAdapter.getItem(position).getMessage());
             }
         });
+
+        et_topic.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                Log.i(TAG, "onTextChanged: " + s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
     @Override
@@ -107,7 +125,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_close_link:
                 // 关闭连接
-                if (mqttClient == null) {
+                if (mqttClient == null || !mqttClient.isConnected()) {
                     return;
                 }
                 new Thread() {
@@ -116,7 +134,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         super.run();
                         try {
                             mqttClient.disconnect();
-                            Log.i(TAG, "哈哈哈：" + mqttClient.isConnected());
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    App.showToast("连接已关闭");
+                                }
+                            });
                         } catch (MqttException e) {
                             e.printStackTrace();
                         }
@@ -125,8 +148,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.btn_subscrib:
                 // 订阅主题
-                if (mqttClient == null) {
-                    App.showToast("请打开连接");
+                if (mqttClient == null || !mqttClient.isConnected()) {
+                    App.showToast("请先建立连接");
                     return;
                 }
                 try {
