@@ -15,7 +15,7 @@
         android:background="@drawable/line"
         android:hint="@string/place_input_url"
         android:inputType="text"
-        android:text="ssl://wa3zrcx.mqtt.iot.gz.baidubce.com:1884" />
+        android:text="tcp://dugf0y7.mqtt.iot.gz.baidubce.com:1883" />
 
     <EditText
         android:id="@+id/et_client_id"
@@ -25,7 +25,7 @@
         android:background="@drawable/line"
         android:hint="@string/place_input_clientid"
         android:inputType="text"
-        android:text="s001" />
+        android:text="lightShadow" />
 
     <EditText
         android:id="@+id/et_username"
@@ -35,7 +35,7 @@
         android:background="@drawable/line"
         android:hint="@string/place_input_username"
         android:inputType="text"
-        android:text="wa3zrcx/s001" />
+        android:text="dugf0y7/lightShadow" />
 
     <EditText
         android:id="@+id/et_password"
@@ -45,7 +45,7 @@
         android:background="@drawable/line"
         android:hint="@string/place_input_password"
         android:inputType="textPassword"
-        android:text="Or46p3LUzhbRcAS9" />
+        android:text="fnwgq7xtu47gaqwg" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -90,19 +90,40 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <EditText
-                    android:id="@+id/et_topic"
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_alignParentStart="true"
+                    android:layout_centerInParent="true"
                     android:layout_centerVertical="true"
-                    android:layout_marginRight="10dp"
                     android:layout_toLeftOf="@id/btn_subscrib"
-                    android:background="@drawable/line"
-                    android:hint="@string/place_input_topic"
-                    android:inputType="text"
-                    android:text="stateup"
-                    android:textSize="12sp" />
+                    android:orientation="horizontal">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/autoCompleteTextView"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/line"
+                        android:completionThreshold="1"
+                        android:inputType="text" />
+
+                    <!--<EditText
+                        android:id="@+id/et_topic"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/line"
+                        android:hint="@string/place_input_topic"
+                        android:inputType="text"
+                        android:text="stateup"
+                        android:textSize="12sp"
+                        android:visibility="gone" />-->
+                </LinearLayout>
+
 
                 <Button
                     android:id="@+id/btn_subscrib"
@@ -113,6 +134,8 @@
                     android:background="@drawable/btn_selector"
                     android:text="订阅"
                     android:textColor="#ffffff" />
+
+
             </RelativeLayout>
 
             <LinearLayout

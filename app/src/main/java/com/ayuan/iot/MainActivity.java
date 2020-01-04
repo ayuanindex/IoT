@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,7 +39,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private EditText et_password;
     private Button btn_open_link;
     private Button btn_close_link;
-    private EditText et_topic;
+    /*private EditText et_topic;*/
     private Button btn_subscrib;
     private ListView lv_topic_result_message;
     private TextView tv_topic_result_message;
@@ -53,10 +55,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private CustomerAdapter customerAdapter;
     private String topic;
     private ArrayList<String> topicList = new ArrayList<>();
+    private AutoCompleteTextView autoCompleteTextView;
     /*private MqttConnectThread mqttConnectThread = new MqttConnectThread();*/
+    /**
+     * 自动填充内容
+     */
+    private static final String[] TOPICSELECTS = new String[]{
+            // 设备向该主题发布消息，可更新物影子。
+            "$baidu/iot/shadow/lightShadow/update/accepted",
+            "$baidu/iot/shadow/lightShadow/update/rejected",
+            //向该主题发布消息，可获取该设备的物影子。
+            "$baidu/iot/shadow/lightShadow/get/accepted",
+            "$baidu/iot/shadow/lightShadow/get/rejected",
+            //当物影子中的期望值字段有更新时，该主题获得消息
+            "$baidu/iot/shadow/lightShadow/delta",
+            //向该主题发布任意JSON格式消息，可清空该设备的物影子。
+            "$baidu/iot/shadow/lightShadow/delete/accepted",
+            "$baidu/iot/shadow/lightShadow/delete/rejected",
+            //订阅该主题，会收到物影子reported的变化，变化条件包括增加属性、减少属性、属性值变化。物接入会将reported字段中发生变化的当前值和更新值发送到该主题。
+            "$baidu/iot/shadow/lightShadow/update/documents",
+            //订阅该主题，会收到当物影子的reported字段发生变化时的物影子全部信息。snapshot主题和documents主题都是在物影子的reported字段发生变化时触发，snapshot主题会收到物影子的全部信息，documents主题只会收到reported中发生变化的值。
+            "$baidu/iot/shadow/lightShadow/update/snapshot",
+            //物接入会为该主题绑定订阅和发布权限，设备可以订阅或发布符合 $baidu/iot/general/# 的主题。例如，设备A发布消息到主题$baidu/iot/general/a，设备B订阅主题$baidu/iot/general/a，则设备A就能与设备B进行通信。
+            "$baidu/iot/general/#"
+    };
+    private ArrayAdapter<String> autoTextAdapter;
 
     @Override
-
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -66,10 +91,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void initData() {
+        //初始化列表
         messageBeans = new ArrayList<>();
         customerAdapter = new CustomerAdapter();
         lv_topic_result_message.setAdapter(customerAdapter);
         lv_topic_result_message.setSelection(messageBeans.size() - 1);
+
+        autoTextAdapter = new ArrayAdapter<String>(this, R.layout.item_autotext, TOPICSELECTS);
+        autoCompleteTextView.setAdapter(autoTextAdapter);
     }
 
     private void initView() {
@@ -79,7 +108,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         et_password = (EditText) findViewById(R.id.et_password);
         btn_open_link = (Button) findViewById(R.id.btn_open_link);
         btn_close_link = (Button) findViewById(R.id.btn_close_link);
-        et_topic = (EditText) findViewById(R.id.et_topic);
+        /*et_topic = (EditText) findViewById(R.id.et_topic);*/
         btn_subscrib = (Button) findViewById(R.id.btn_subscrib);
         lv_topic_result_message = (ListView) findViewById(R.id.lv_topic_result_message);
         tv_topic_result_message = (TextView) findViewById(R.id.tv_topic_result_message);
@@ -90,6 +119,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         btn_close_link.setOnClickListener(this);
         btn_subscrib.setOnClickListener(this);
         btn_send_message.setOnClickListener(this);
+        autoCompleteTextView = (AutoCompleteTextView) findViewById(R.id.autoCompleteTextView);
+        autoCompleteTextView.setOnClickListener(this);
     }
 
     private void listener() {
@@ -100,7 +131,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         });
 
-        et_topic.addTextChangedListener(new TextWatcher() {
+        /*et_topic.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
 
@@ -111,13 +142,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 topic = s.toString();
                 topicIsSubscribe();
             }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });*/
+
+        autoCompleteTextView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                topic = s.toString();
+                topicIsSubscribe();
+            }
+
             @Override
             public void afterTextChanged(Editable s) {
 
             }
         });
+
+        autoCompleteTextView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                topic = TOPICSELECTS[position];
+                topicIsSubscribe();
+            }
+        });
     }
 
+    /**
+     * 验证主题是否已经订阅
+     * 如果已经订阅，则禁用按钮，如果没有，按钮可用
+     */
     private void topicIsSubscribe() {
         if (topicList.contains(topic)) {
             btn_subscrib.setEnabled(false);
@@ -133,95 +195,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.btn_open_link:
                 // 开启连接
-                submit();
+                connect();
                 break;
             case R.id.btn_close_link:
                 // 关闭连接
-                if (mqttClient == null || !mqttClient.isConnected()) {
-                    return;
-                }
-                new Thread() {
-                    @Override
-                    public void run() {
-                        super.run();
-                        try {
-                            mqttClient.disconnect();
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    App.showToast("连接已关闭");
-                                }
-                            });
-                        } catch (MqttException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }.start();
+                disConnect();
                 break;
             case R.id.btn_subscrib:
                 // 订阅主题
-                if (mqttClient == null || !mqttClient.isConnected()) {
-                    App.showToast("请先建立连接");
-                    return;
-                }
-                try {
-                    topic = et_topic.getText().toString().trim();
-                    if (!TextUtils.isEmpty(topic)) {
-                        mqttClient.subscribe(topic, 0);
-                        topicList.add(topic);
-                        topicIsSubscribe();
-                        runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                App.showToast("主题订阅成功！");
-                            }
-                        });
-                    }
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                    App.showToast("不存在该主题！！！");
-                }
+                subscribe();
                 break;
             case R.id.btn_send_message:
                 // 向指定主题发送消息
-                final String message = et_message.getText().toString().trim();
-                if (TextUtils.isEmpty(message)) {
-                    App.showToast("请输入需要发送的消息");
-                    return;
-                } else if (mqttClient == null || !mqttClient.isConnected()) {
-                    App.showToast("请先建立连接");
-                    return;
-                } else {
-                    new Thread() {
-                        @Override
-                        public void run() {
-                            super.run();
-                            try {
-                                if (mqttClient == null) {
-                                    App.showToast("请打开连接");
-                                }
-                                if (topicList.size() != 0 /*&& topicList.contains(topic)*/) {
-                                    mqttClient.publish(topic, new MqttMessage(message.getBytes()));
-                                } /*else {
-                                    runOnUiThread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            App.showToast("该主题尚未订阅，请订阅主题！");
-                                        }
-                                    });
-                                }*/
-                            } catch (MqttException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }.start();
-                }
+                sendMessageToTopic();
                 break;
         }
     }
 
-    private void submit() {
-        // validate
+    private void connect() {
         url = et_url.getText().toString().trim();
         if (TextUtils.isEmpty(url)) {
             Toast.makeText(this, "地址不能为空", Toast.LENGTH_SHORT).show();
@@ -247,6 +238,97 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         initMQTT();
+    }
+
+    private void disConnect() {
+        if (mqttClient == null || !mqttClient.isConnected()) {
+            return;
+        }
+        new Thread() {
+            @Override
+            public void run() {
+                super.run();
+                try {
+                    mqttClient.disconnect();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            App.showToast("连接已关闭");
+                        }
+                    });
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
+            }
+        }.start();
+    }
+
+    /**
+     * 订阅主题
+     */
+    private void subscribe() {
+        try {
+            if (mqttClient == null || !mqttClient.isConnected()) {
+                App.showToast("请先建立连接");
+            } else {
+                if (!TextUtils.isEmpty(topic)) {
+                    mqttClient.subscribe(topic, 0);
+                    topicList.add(topic);
+                    for (String s : topicList) {
+                        Log.i(TAG, "哈哈哈：" + s);
+                    }
+                    topicIsSubscribe();
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            App.showToast("主题订阅成功！");
+                        }
+                    });
+                }
+            }
+        } catch (MqttException e) {
+            e.printStackTrace();
+            App.showToast("不存在该主题！！！");
+        }
+    }
+
+    /**
+     * 向主题发送消息
+     */
+    private void sendMessageToTopic() {
+        final String message = et_message.getText().toString().trim();
+        if (TextUtils.isEmpty(message)) {
+            App.showToast("请输入需要发送的消息！");
+        } else if (mqttClient == null || !mqttClient.isConnected()) {
+            App.showToast("请先建立连接！");
+        } else {
+            new Thread() {
+                @Override
+                public void run() {
+                    super.run();
+                    try {
+                        /**
+                         * 只能发送消息的主题
+                         * 1、$baidu/iot/shadow/lightShadow/update
+                         * 2、$baidu/iot/shadow/lightShadow/get
+                         * 3、$baidu/iot/shadow/lightShadow/delta
+                         */
+                        if (topicList.size() != 0/* && topicList.contains(topic)*/) {
+                            mqttClient.publish(topic, new MqttMessage(message.getBytes()));
+                        } /*else {
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    App.showToast("该主题尚未订阅，请订阅主题！");
+                                }
+                            });
+                        }*/
+                    } catch (MqttException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }.start();
+        }
     }
 
     /**
@@ -279,6 +361,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            topicList.clear();
                             App.showToast("连接丢失");
                         }
                     });
