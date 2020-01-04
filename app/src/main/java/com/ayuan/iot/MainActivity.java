@@ -200,16 +200,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                                 if (mqttClient == null) {
                                     App.showToast("请打开连接");
                                 }
-                                if (topicList.size() != 0 && topicList.contains(topic)) {
+                                if (topicList.size() != 0 /*&& topicList.contains(topic)*/) {
                                     mqttClient.publish(topic, new MqttMessage(message.getBytes()));
-                                } else {
+                                } /*else {
                                     runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
                                             App.showToast("该主题尚未订阅，请订阅主题！");
                                         }
                                     });
-                                }
+                                }*/
                             } catch (MqttException e) {
                                 e.printStackTrace();
                             }
