@@ -134,7 +134,7 @@ public class CustomerMQTTClient {
                 public void run() {
                     super.run();
                     try {
-                        mqttClient.connect();
+                        mqttClient.connect(CustomerMQTTClient.this.mqttConnectOptions);
                         //连接建立成功
                         customerMQTTCallback.connectedCallback(true);
                     } catch (MqttSecurityException e) {
