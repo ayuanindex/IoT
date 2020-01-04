@@ -17,32 +17,7 @@ public class CustomerMQTTClient {
     /**
      * 可订阅主题
      */
-    private final ArrayList<String> TOPICSELECTS = new ArrayList<String>() {
-        @Override
-        public void add(int index, String element) {
-            super.add(index, element);
-            // 设备向该主题发布消息，可更新物影子。
-            add("$baidu/iot/shadow/lightShadow/update/accepted");
-            add("$baidu/iot/shadow/lightShadow/update/rejected");
-            // 向该主题发布消息，可获取该设备的物影子。
-            add("$baidu/iot/shadow/lightShadow/get/accepted");
-            add("$baidu/iot/shadow/lightShadow/get/rejected");
-            // 当物影子中的期望值字段有更新时，该主题获得消息
-            add("$baidu/iot/shadow/lightShadow/delta");
-            // 向该主题发布任意JSON格式消息，可清空该设备的物影子。
-            add("$baidu/iot/shadow/lightShadow/delete/accepted");
-            add("$baidu/iot/shadow/lightShadow/delete/rejected");
-            // 订阅该主题，会收到物影子reported的变化，变化条件包括增加属性、减少属性、属性值变化。
-            // 物接入会将reported字段中发生变化的当前值和更新值发送到该主题。
-            add("$baidu/iot/shadow/lightShadow/update/documents");
-            // 订阅该主题，会收到当物影子的reported字段发生变化时的物影子全部信息。
-            // snapshot主题和documents主题都是在物影子的reported字段发生变化时触发，snapshot主题会收到物影子的全部信息，documents主题只会收到reported中发生变化的值。
-            add("$baidu/iot/shadow/lightShadow/update/snapshot");
-            // 物接入会为该主题绑定订阅和发布权限，设备可以订阅或发布符合 $baidu/iot/general/# 的主题。
-            // 例如，设备A发布消息到主题$baidu/iot/general/a，设备B订阅主题$baidu/iot/general/a，则设备A就能与设备B进行通信。
-            add("$baidu/iot/general/");
-        }
-    };
+    private final ArrayList<String> TOPICSELECTS = new ArrayList<String>();
 
     /**
      * $baidu/iot/shadow/lightShadow/update
@@ -93,6 +68,30 @@ public class CustomerMQTTClient {
         this.NAME = NAME;
         this.KEY = KEY.toCharArray();
         this.customerMQTTCallback = customerMQTTCallback;
+        addSubscribe();
+    }
+
+    private void addSubscribe() {
+        // 设备向该主题发布消息，可更新物影子。
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/update/accepted");
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/update/rejected");
+        // 向该主题发布消息，可获取该设备的物影子。
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/get/accepted");
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/get/rejected");
+        // 当物影子中的期望值字段有更新时，该主题获得消息
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/delta");
+        // 向该主题发布任意JSON格式消息，可清空该设备的物影子。
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/delete/accepted");
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/delete/rejected");
+        // 订阅该主题，会收到物影子reported的变化，变化条件包括增加属性、减少属性、属性值变化。
+        // 物接入会将reported字段中发生变化的当前值和更新值发送到该主题。
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/update/documents");
+        // 订阅该主题，会收到当物影子的reported字段发生变化时的物影子全部信息。
+        // snapshot主题和documents主题都是在物影子的reported字段发生变化时触发，snapshot主题会收到物影子的全部信息，documents主题只会收到reported中发生变化的值。
+        TOPICSELECTS.add("$baidu/iot/shadow/lightShadow/update/snapshot");
+        // 物接入会为该主题绑定订阅和发布权限，设备可以订阅或发布符合 $baidu/iot/general/# 的主题。
+        // 例如，设备A发布消息到主题$baidu/iot/general/a，设备B订阅主题$baidu/iot/general/a，则设备A就能与设备B进行通信。
+        TOPICSELECTS.add("$baidu/iot/general/");
     }
 
     /**
