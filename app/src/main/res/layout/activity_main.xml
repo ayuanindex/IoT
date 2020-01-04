@@ -108,7 +108,8 @@
                         android:layout_weight="1"
                         android:background="@drawable/line"
                         android:completionThreshold="1"
-                        android:inputType="text" />
+                        android:inputType="text"
+                        android:text="$baidu/iot/shadow/lightShadow" />
 
                     <!--<EditText
                         android:id="@+id/et_topic"

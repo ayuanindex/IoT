@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private AutoCompleteTextView autoCompleteTextView;
     /*private MqttConnectThread mqttConnectThread = new MqttConnectThread();*/
     /**
-     * 自动填充内容
+     * 可订阅主题
      */
     private static final String[] TOPICSELECTS = new String[]{
             // 设备向该主题发布消息，可更新物影子。
@@ -212,6 +212,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
+    /**
+     * 打开连接
+     */
     private void connect() {
         url = et_url.getText().toString().trim();
         if (TextUtils.isEmpty(url)) {
@@ -240,6 +243,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         initMQTT();
     }
 
+    /**
+     * 关闭连接
+     */
     private void disConnect() {
         if (mqttClient == null || !mqttClient.isConnected()) {
             return;
@@ -307,11 +313,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 public void run() {
                     super.run();
                     try {
-                        /**
+                        /*
                          * 只能发送消息的主题
                          * 1、$baidu/iot/shadow/lightShadow/update
                          * 2、$baidu/iot/shadow/lightShadow/get
-                         * 3、$baidu/iot/shadow/lightShadow/delta
+                         * 3、$baidu/iot/shadow/lightShadow/delete
                          */
                         if (topicList.size() != 0/* && topicList.contains(topic)*/) {
                             mqttClient.publish(topic, new MqttMessage(message.getBytes()));
